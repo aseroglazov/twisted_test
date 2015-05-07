@@ -13,12 +13,20 @@ from twisted_test import app
 
 WARMUP_TIMEOUT = 2
 UNKNOWN_IMAGE_ID = 'fake-image-id'
+PORT = 9090
+
+
+def get_url(url):
+    return 'http://127.0.0.1:{port}/{url}'.format(
+        port=PORT,
+        url=url.lstrip('/')
+    )
 
 
 class TestApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        thread = Thread(target=app.start)
+        thread = Thread(target=app.start, args=[PORT])
         thread.daemon = True
         thread.start()
         sleep(WARMUP_TIMEOUT)
@@ -28,11 +36,13 @@ class TestApi(unittest.TestCase):
         app.stop()
 
     def test_get_static_files(self):
-        response = requests.get('http://127.0.0.1:8080/index.html')
+        response = requests.get(get_url('/index.html'))
         self.assertEqual(response.status_code, 200)
 
     def test_get_unknown_image(self):
-        response = requests.get('http://127.0.0.1:8080/api/images/get/{}'.format(UNKNOWN_IMAGE_ID))
+        response = requests.get(
+            get_url('/api/images/get/{}'.format(UNKNOWN_IMAGE_ID))
+        )
         self.assertEqual(response.status_code, 404)
 
     def test_get_images(self):
@@ -40,7 +50,9 @@ class TestApi(unittest.TestCase):
             path_to_image = self._get_image_path(extension)
             image_id = self._add_new_image(path_to_image)
 
-            response = requests.get('http://127.0.0.1:8080/api/images/get/{}'.format(image_id))
+            response = requests.get(
+                get_url('/api/images/get/{}'.format(image_id))
+            )
             self.assertEqual(response.status_code, 200)
             
     def test_get_flipped_images(self):
@@ -48,7 +60,9 @@ class TestApi(unittest.TestCase):
             path_to_image = self._get_image_path(extension)
             image_id = self._add_new_image(path_to_image)
 
-            response = requests.get('http://127.0.0.1:8080/api/images/get/{}/flip'.format(image_id))
+            response = requests.get(
+                get_url('/api/images/get/{}/flip'.format(image_id))
+            )
             self.assertEqual(response.status_code, 200)
 
             
@@ -61,7 +75,7 @@ class TestApi(unittest.TestCase):
 
     def _add_new_image(self, path_to_image):
         response = requests.post(
-            'http://127.0.0.1:8080/api/images/add',
+            get_url('/api/images/add'),
             files={'image': open(path_to_image, 'rb')}
         )
 
@@ -79,5 +93,3 @@ class TestApi(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestApi)
-    #unittest.TextTestRunner(verbosity=2).run(suite)
