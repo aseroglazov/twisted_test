@@ -1,0 +1,2 @@
+recursive-include twisted_test/url_tree/static *
+recursive-exclude twisted_test *.pyc
