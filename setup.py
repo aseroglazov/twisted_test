@@ -15,7 +15,7 @@ setup(
         'Twisted',
         'pymongo==2.8',
         'mongoengine',
-        'PIL',
+        'Pillow',
     ],
     tests_require=['requests']
 )
